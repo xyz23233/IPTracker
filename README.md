@@ -1,6 +1,3 @@
-# repeep-backend-php
-nonebot-plugin-repeep插件配套CSRF后端的PHP实现
-
 # 开始使用
 
 ## 前提
