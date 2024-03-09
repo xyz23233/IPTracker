@@ -39,8 +39,6 @@ class Model
     {
         $data = array();
         if ($this->is_lock()) {
-            return null;
-        } else {
             if (($fp = fopen($this->filename, 'r')) !== false) {
                 while (($row = fgetcsv($fp)) !== false) {
                     array_push($data, $row);
@@ -49,12 +47,14 @@ class Model
             }
             unlink($this->filename);
             return $data;
+        } else {
+            return null;
         }
     }
 
     public function update($data)
     {
-        if (!$this->is_lock()) {
+        if ($this->is_lock()) {
             if (($fp = fopen($this->filename, 'a')) !== false) {
                 fputcsv($fp, $data);
                 fclose($fp);
@@ -64,6 +64,6 @@ class Model
 
     public function is_lock()
     {
-        return !file_exists($this->filename);
+        return file_exists($this->filename);
     }
 }

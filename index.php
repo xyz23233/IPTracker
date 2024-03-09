@@ -1,15 +1,17 @@
 <?php
-//csrf tracer
+
+require_once('./config.php');
 require_once('./model.php');
 
 $k = strtolower(trim(isset($_GET['k']) ? $_GET['k'] : ''));
-
 $key = pathinfo($k, PATHINFO_FILENAME);
 
 if (!empty($key)) {
     $model = new Model($key);
-    if (!$model->is_lock()) {
-        $model->update(get_client_info());
+    if ($model->is_lock()) {
+       if ($filter == 0 || strripos(file_get_contents(__DIR__ . '/data/' . $key . '.csv'), get_ip()) == false) { 
+            $model->update(get_client_info());
+       }
     }
 }
 
@@ -20,55 +22,18 @@ render($ext);
 function render($ext)
 {
     if (!empty($ext)) {
-        $image_ext = ['jpeg', 'jpg', 'png', 'gif', 'wbmp'];
-        $video_ext = ['mp4', 'm4v'];
-        $audio_ext = ['mp3'];
-        if (in_array($ext, $image_ext)) {
+        $mp3Files = glob(__DIR__ . "/render/*." . $ext); // 使用glob函数搜索文件
+         if (!empty($mp3Files)) {
+           render_stream($mp3Files[array_rand($mp3Files)]);
+        } else {
             // 创键空白图像并添加一些文本
             $im = imagecreatetruecolor(125, 125);
             $text_color = imagecolorallocate($im, 255, 255, 255);
             imagestring($im, 5, 20, 52, 'I Got U :)', $text_color);
-            header('Content-Type: ' . ext_content_type($ext));
-            switch ($ext) {
-                case 'jpeg':
-                case 'jpg':
-                    imagejpeg($im);
-                    break;
-                case 'png':
-                    imagepng($im);
-                    break;
-                case 'gif':
-                    imagegif($im);
-                    break;
-                case 'wbmp':
-                    imagewbmp($im);
-                    break;
-                default:
-                    die('Unexpected Error');
-            }
+            header('Content-Type: image/jpeg');
+            imagejpeg($im);
             // 释放内存
             imagedestroy($im);
-        } elseif (in_array($ext, $video_ext)) {
-            switch ($ext) {
-                case 'mp4':
-                case 'm4v':
-                    $filename = __DIR__ . '/render/1.mp4';
-                    render_stream($filename);
-                    break;
-                default:
-                    die('Unexpected Error');
-            }
-        } elseif (in_array($ext, $audio_ext)) {
-            switch ($ext) {
-                case 'mp3':
-                    $filename = __DIR__ . '/render/1.mp3';
-                    render_stream($filename);
-                    break;
-                default:
-                    die('Unexpected Error');
-            }
-        } else {
-            die("Unsupported Extension Format");
         }
     } else {
         exit('I Got U');
